@@ -1,161 +1,184 @@
 package com.company;
 
-import java.util.Random;
+import java.lang.reflect.Array;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class Main {
 
-    public static class Roots extends Throwable {
-            double root[];
-            MyVector(Double a, Double b){
-                root[0] = a;
-                root[1] = b;
-            }
-        };
+    enum FuncType{
+        NoException, Normal , FullException
+    };
+
+    public static class ThrowableVector extends Throwable {
+            Vector<Double> roots = new Vector<Double>();
+    }
 
     static boolean isEqual(double a, double b){
-        if (a == b){
-            return true;
-        }
-        else return false;
+        double eps = 0.00001;
+        return Math.abs(a-b) < eps;
     }
 
-    static Vector<Double> calc(double a, double b, double c, boolean ok)
+    static Vector<Double> solve_correct_equation(double a,double b,double c){
+        assert(!(isEqual(a, 0) && isEqual(b, 0) && isEqual(c, 0)));
+        if (isEqual(a, 0) && isEqual(b, 0)) {
+            return new Vector<Double>(0);
+        }
+
+        if (isEqual(a, 0)) {
+            Vector<Double> vec = new Vector<Double>(1);
+            vec.add(-c/b);
+            return vec;
+        }
+
+        double discriminant = (b * b) - (4 * a * c);
+        if (isEqual(discriminant, 0)) {
+            Vector<Double> vec = new Vector<Double>(1);
+            vec.add(-b/(2*a));
+            return vec;
+        }
+        if (discriminant < 0) {
+            return new Vector<Double>(0);
+        }
+        Vector<Double> vec = new Vector<Double>(2);
+        vec.add((-b + Math.sqrt(discriminant)) / (2 * a));
+        vec.add((-b - Math.sqrt(discriminant)) / (2 * a));
+        return vec;
+        };
+
+
+    static Vector<Double> solve_no_exceptions(double a, double b, double c, boolean ok)
     {
         ok = true;
-        if  (isEqual(a,0))
-        {
-            if (isEqual(b,0))
-            {
-                if (isEqual(c,0))
-                {
-                    ok = false;
+        if (isEqual(a, 0) && isEqual(b, 0) && isEqual(c, 0)) {
+            ok = false;
                     return new Vector<Double>();
                 }
-                else return new Vector<Double>();
-            }
-            else{
-                Vector<Double> vec = new Vector<Double>(1);
-                vec.add(0,-c/b);
-                return vec;
-            }
-
-        }
-        double disc = (b*b) - (4*a*c);
-
-        if (isEqual(disc,0))
-        {
-            Vector<Double> vec = new Vector<Double>(1);
-            vec.add(0,(-b)/(2*a));
-            return vec;
-
-        }
-        if (disc<0)
-        {
-            return new Vector<Double>();
-        }
-        else
-        {
-            Vector<Double> vec = new Vector<Double>(2);
-            vec.add((-b+Math.sqrt(disc))/(2*a));
-            vec.add((-b-Math.sqrt(disc))/(2*a));
-            System.out.println(vec);
-            return vec;
-        }
+        return solve_correct_equation(a,b,c);
     }
-
-    static Vector<Double> exceptCalc(double a, double b, double c) throws Exception{
-        if  (isEqual(a,0))
-        {
-            if (isEqual(b,0))
-            {
-                if (isEqual(c,0))
-                {
-                    throw new Exception("Invalid Parametrs");
-                }
-                else return new Vector<Double>();
-            }
-            else{
-                Vector<Double> vec = new Vector<Double>(1);
-                vec.add(0,-c/b);
-                return vec;
-            }
-
-        }
-        double disc = (b*b) - (4*a*c);
-
-        if (isEqual(disc,0))
-        {
-            Vector<Double> vec = new Vector<Double>(1);
-            vec.add(0,(-b)/(2*a));
-            return vec;
-
-        }
-        if (disc<0)
-        {
-            return new Vector<Double>();
-        }
-        else
-        {
-            Vector<Double> vec = new Vector<Double>(2);
-            vec.add((-b+Math.sqrt(disc))/(2*a));
-            vec.add((-b-Math.sqrt(disc))/(2*a));
-            return vec;
-        }
-    }
-
-    static void wrongCalc(double a,double b,double c) throws Throwable {
-        if  (isEqual(a,0))
-        {
-            if (isEqual(b,0))
-            {
-                if (isEqual(c,0))
-                {
-                    throw new Exception("Invalid Parametrs");
-                }
-                else throw new Roots(null,null);
-            }
-            else throw new Roots(-c/b,null);
-        }
-        double disc = (b*b) - (4*a*c);
-        if (isEqual(disc,0))
-        {
-            throw new Roots((-b)/(2*a),null);
-        }
-        if (disc<0)
-        {
-            throw new Roots(null,null);
-        }
-        else
-        {
-
-                throw new Roots((-b+Math.sqrt(disc))/(2*a),(-b-Math.sqrt(disc))/(2*a));
-        }
-        }
-
 
     public static void main(String[] args) {
+        Vector<Double> vec= new Vector<Double>();
+        final int from = 4096;
+        final int to= from *512;
+        for (long i = from;i<=to; i*=2)
+        {
+            run (i, FuncType.NoException);
+        }
+        for (long i = from;i<=to; i*=2)
+        {
+            run (i, FuncType.Normal);
+        }
+        for (long i = from;i<=to; i*=2)
+        {
+            run (i, FuncType.FullException);
+        }
+    }
 
+    static void run(long n, FuncType type) {
         long time = System.nanoTime();
-        run(2056);
+         double sum = 0;
+            for (long i = 0; i < n; i++) {
+                double a = ((i % 2000) - 1000) / 33.0;
+                double b = ((i % 200) - 100) / 22.0;
+                double c = ((i % 20) - 10) / 11.0;
+                sum += call_solver(type, a,b,c);
+            }
+
+
+//        ExecutorService executor = Executors.newFixedThreadPool(4);
+//           double[] sum_ = new double[1];
+//           sum_[0] = 0;
+//        executor.submit(() -> {
+//            for (long i = 0; i < n; i++) {
+//                double a = ((i % 2000) - 1000) / 33.0;
+//                double b = ((i % 200) - 100) / 22.0;
+//                double c = ((i % 20) - 10) / 11.0;
+//                sum_[0] += call_solver(type, a,b,c);
+//            }
+//
+//        executor.shutdown();
+//           });
         time = System.nanoTime() - time;
         System.out.printf("Elapsed %,9.3f ms\n", time/1_000_000.0);
     }
 
-    public static void run(int n) {
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.submit(() -> {
-            for (int i = 0; i < n; i++) {
-                calculate();
-            }
-        });
-        executor.shutdown();
+
+    static double call_solver(FuncType type, double a, double b, double c) {
+        switch (type) {
+            case Normal:
+                return roots_sum(a,b,c);
+            case NoException:
+               return roots_sum_no_exception(a,b,c);
+            case FullException:
+                return roots_sum_full_exception(a,b,c);
+            default:
+                return 0;
+        }
     }
 
-    public static void calculate() {
-        Random random = new Random();
-        Vector<Double> a = calc(random.nextDouble(),random.nextDouble(),random.nextDouble(), true);
+    static double roots_sum(double a, double b, double c) {
+        try {
+            Vector<Double> roots = solve(a,b,c);
+            return sum_vec(roots);
+        }
+        catch (RuntimeException runtimeException){
+            return 0;
+        }
     }
+
+    static Vector<Double> solve(double a, double b, double c) {
+        if (isEqual(a, 0) && isEqual(b, 0) && isEqual(c, 0)) {
+            throw new RuntimeException("root is any value");
+        }
+        return solve_correct_equation(a,b,c);
+    }
+
+    static double roots_sum_no_exception(double a, double b, double c){
+        boolean ok = true;
+        if (true == ok) {
+            return sum_vec(solve_no_exceptions(a,b,c, ok));
+        }
+        return 0;
+
+    }
+
+    static double sum_vec(Vector<Double> roots) {
+        double sum = 0;
+        for (int i = 0; i<roots.size(); i++){
+            sum+=roots.elementAt(i);
+        }
+        return sum;
+    }
+    public static double sum_vec(ThrowableVector roots) {
+        double sum = 0;
+        for (int i = 0; i<roots.roots.size(); i++){
+            sum+=roots.roots.elementAt(i);
+        }
+        return sum;
+    }
+
+    static double roots_sum_full_exception(double a, double b, double c) {
+        try {
+            solve_full_exception(a, b, c);
+        } catch (RuntimeException s){
+            return 0;
+        }
+        catch (ThrowableVector vector){
+            return sum_vec(vector);
+        }
+        throw new RuntimeException("wrong exception");
+    }
+
+    static void solve_full_exception(double a, double b, double c) throws ThrowableVector {
+        if (isEqual(a, 0) && isEqual(b, 0) && isEqual(c, 0)) {
+            throw new RuntimeException("root is any value");
+        }
+        ThrowableVector vec = new ThrowableVector();
+        vec.roots = (solve_correct_equation(a,b,c));
+        throw vec;
+    }
+
+
 }
