@@ -7,11 +7,11 @@ import java.util.concurrent.Executors;
 
 class Main {
 
-    public static class MyVector extends Throwable {
-            double num[];
+    public static class Roots extends Throwable {
+            double root[];
             MyVector(Double a, Double b){
-                num[0] = a;
-                num[1] = b;
+                root[0] = a;
+                root[1] = b;
             }
         };
 
@@ -115,23 +115,23 @@ class Main {
                 {
                     throw new Exception("Invalid Parametrs");
                 }
-                else throw new MyVector(null,null);
+                else throw new Roots(null,null);
             }
-            else throw new MyVector(-c/b,null);
+            else throw new Roots(-c/b,null);
         }
         double disc = (b*b) - (4*a*c);
         if (isEqual(disc,0))
         {
-            throw new MyVector((-b)/(2*a),null);
+            throw new Roots((-b)/(2*a),null);
         }
         if (disc<0)
         {
-            throw new MyVector(null,null);
+            throw new Roots(null,null);
         }
         else
         {
 
-                throw new MyVector((-b+Math.sqrt(disc))/(2*a),(-b-Math.sqrt(disc))/(2*a));
+                throw new Roots((-b+Math.sqrt(disc))/(2*a),(-b-Math.sqrt(disc))/(2*a));
         }
         }
 
