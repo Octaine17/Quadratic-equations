@@ -48,9 +48,7 @@ class Main {
         vec.add((-b - Math.sqrt(discriminant)) / (2 * a));
         return vec;
     }
-
-    ;
-
+    
 
     static Object solve_no_exceptions(double a, double b, double c, boolean ok) {
         ok = true;
