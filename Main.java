@@ -48,7 +48,7 @@ class Main {
         vec.add((-b - Math.sqrt(discriminant)) / (2 * a));
         return vec;
     }
-    
+
 
     static Object solve_no_exceptions(double a, double b, double c, boolean ok) {
         ok = true;
@@ -59,7 +59,7 @@ class Main {
         return new Pair<>(ok, solve_correct_equation(a, b, c));
     }
 
-    static double call_solver(FuncType type, double a, double b, double c) {
+    static synchronized double call_solver(FuncType type, double a, double b, double c) {
         switch (type) {
             case Normal:
                 return roots_sum(a, b, c);
@@ -150,33 +150,26 @@ class Main {
 
     static void run(long n, FuncType type) {
         long time = System.nanoTime();
-        double sum = 0;
-        for (long i = 0; i < n; i++) {
-            double a = ((i % 2000) - 1000) / 33.0;
-            double b = ((i % 200) - 100) / 22.0;
-            double c = ((i % 20) - 10) / 11.0;
-            sum += call_solver(type, a, b, c);
-        }
+//        double sum = 0;
+//        for (long i = 0; i < n; i++) {
+//            double a = ((i % 2000) - 1000) / 33.0;
+//            double b = ((i % 200) - 100) / 22.0;
+//            double c = ((i % 20) - 10) / 11.0;
+//            sum += call_solver(type, a, b, c);
+//        }
 
 
-//        ExecutorService executor = Executors.newFixedThreadPool(4);
-//        double[] sum_ = new double[4];
-//        sum_[0] = 0;
-//        sum_[1] = 0;
-//        sum_[2] = 0;
-//        sum_[3] = 0;
-//        executor.submit(() -> {
-//            for (long i = 0; i < n; i++) {
-//                double a = ((i % 2000) - 1000) / 33.0;
-//                double b = ((i % 200) - 100) / 22.0;
-//                double c = ((i % 20) - 10) / 11.0;
-//                sum_[0] += call_solver(type, a, b, c);
-//                sum_[1] += call_solver(type, a, b, c);
-//                sum_[2] += call_solver(type, a, b, c);
-//                sum_[3] += call_solver(type, a, b, c);
-//            }
-//            executor.shutdown();
-//        });
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        double[] sum_ = new double[4];
+        executor.submit(() -> {
+            for (long i = 0; i < n; i++) {
+                double a = ((i % 2000) - 1000) / 33.0;
+                double b = ((i % 200) - 100) / 22.0;
+                double c = ((i % 20) - 10) / 11.0;
+                sum_[0] += call_solver(type, a, b, c);
+            }
+            executor.shutdown();
+        });
 //        for (int i = 0; i<4;i++){
 //            sum += sum_[i];
 //        }
