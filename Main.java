@@ -2,9 +2,11 @@ package com.company;
 
 import javafx.util.Pair;
 
-import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 class Main {
 
@@ -59,7 +61,7 @@ class Main {
         return new Pair<>(ok, solve_correct_equation(a, b, c));
     }
 
-    static synchronized double call_solver(FuncType type, double a, double b, double c) {
+    static double call_solver(FuncType type, double a, double b, double c) {
         switch (type) {
             case Normal:
                 return roots_sum(a, b, c);
@@ -134,14 +136,14 @@ class Main {
 
 
     public static void main(String[] args) {
-        Vector<Double> vec = new Vector<Double>();
-        final int from = 4096;
+        final int from = 1024;
         final int to = from * 512;
-        for (long i = from; i <= to; i *= 2) {
-            run(i, FuncType.NoException);
-        }
+
         for (long i = from; i <= to; i *= 2) {
             run(i, FuncType.Normal);
+        }
+        for (long i = from; i <= to; i *= 2) {
+            run(i, FuncType.NoException);
         }
         for (long i = from; i <= to; i *= 2) {
             run(i, FuncType.FullException);
@@ -150,29 +152,35 @@ class Main {
 
     static void run(long n, FuncType type) {
         long time = System.nanoTime();
-//        double sum = 0;
-//        for (long i = 0; i < n; i++) {
-//            double a = ((i % 2000) - 1000) / 33.0;
-//            double b = ((i % 200) - 100) / 22.0;
-//            double c = ((i % 20) - 10) / 11.0;
-//            sum += call_solver(type, a, b, c);
-//        }
+        double sum = 0;
+        for (long i = 0; i < n; i++) {
+            double a = ((i % 2000) - 1000) / 33.0;
+            double b = ((i % 200) - 100) / 22.0;
+            double c = ((i % 20) - 10) / 11.0;
+            sum += call_solver(type, a, b, c);
 
-
-        ExecutorService executor = Executors.newFixedThreadPool(4);
-        double[] sum_ = new double[4];
-        executor.submit(() -> {
-            for (long i = 0; i < n; i++) {
-                double a = ((i % 2000) - 1000) / 33.0;
-                double b = ((i % 200) - 100) / 22.0;
-                double c = ((i % 20) - 10) / 11.0;
-                sum_[0] += call_solver(type, a, b, c);
-            }
-            executor.shutdown();
-        });
-//        for (int i = 0; i<4;i++){
-//            sum += sum_[i];
-//        }
+        }
+        
+//        AtomicReference<Double> final_sum = new AtomicReference<>((double) 0);
+//        ExecutorService executor = Executors.newFixedThreadPool(4);
+//        Lock lock = new ReentrantLock();
+//        executor.submit(() -> {
+//            double temp_sum = 0;
+//            for (long i = 0; i < n; i++) {
+//                double a = ((i % 2000) - 1000) / 33.0;
+//                double b = ((i % 200) - 100) / 22.0;
+//                double c = ((i % 20) - 10) / 11.0;
+//                temp_sum += call_solver(type, a, b, c);
+//            }
+//            lock.lock();
+//            try {
+//                double finalTemp_sum = temp_sum;
+//                final_sum.updateAndGet(v -> new Double((double) (v + finalTemp_sum)));
+//            } finally {
+//                lock.unlock();
+//            }
+//            executor.shutdown();
+//        });
         time = System.nanoTime() - time;
         System.out.printf("Elapsed %,9.3f ms\n", time / 1_000_000.0);
     }
