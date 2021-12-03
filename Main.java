@@ -14,7 +14,6 @@ class Main {
         NoException, Normal, FullException
     }
 
-
     public static class ThrowableVector extends Throwable {
         Vector<Double> vector = new Vector<Double>();
     }
