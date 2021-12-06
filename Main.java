@@ -2,13 +2,14 @@ package com.company;
 
 import javafx.util.Pair;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-class Main {
+public class Main {
 
     enum FuncType {
         NoException, Normal, FullException
@@ -137,13 +138,15 @@ class Main {
     public static void main(String[] args) {
         final int from = 1024;
         final int to = from * 512;
-
+        System.out.println("\t\t\t--------Normal-----------");
         for (long i = from; i <= to; i *= 2) {
             run(i, FuncType.Normal);
         }
+        System.out.println("\t\t\t--------No exception-----------");
         for (long i = from; i <= to; i *= 2) {
             run(i, FuncType.NoException);
         }
+        System.out.println("\t\t\t--------FullException-----------");
         for (long i = from; i <= to; i *= 2) {
             run(i, FuncType.FullException);
         }
@@ -157,30 +160,31 @@ class Main {
             double b = ((i % 200) - 100) / 22.0;
             double c = ((i % 20) - 10) / 11.0;
             sum += call_solver(type, a, b, c);
-
         }
-        
-//        AtomicReference<Double> final_sum = new AtomicReference<>((double) 0);
-//        ExecutorService executor = Executors.newFixedThreadPool(4);
-//        Lock lock = new ReentrantLock();
-//        executor.submit(() -> {
-//            double temp_sum = 0;
-//            for (long i = 0; i < n; i++) {
-//                double a = ((i % 2000) - 1000) / 33.0;
-//                double b = ((i % 200) - 100) / 22.0;
-//                double c = ((i % 20) - 10) / 11.0;
-//                temp_sum += call_solver(type, a, b, c);
-//            }
-//            lock.lock();
-//            try {
-//                double finalTemp_sum = temp_sum;
-//                final_sum.updateAndGet(v -> new Double((double) (v + finalTemp_sum)));
-//            } finally {
-//                lock.unlock();
-//            }
-//            executor.shutdown();
-//        });
         time = System.nanoTime() - time;
-        System.out.printf("Elapsed %,9.3f ms\n", time / 1_000_000.0);
+        System.out.printf("Elapsed Consecutively %,9.3f ms\n", time / 1_000_000.0);
+        time = System.nanoTime();
+        AtomicReference<Double> final_sum = new AtomicReference<>((double) 0);
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        Lock lock = new ReentrantLock();
+        executor.submit(() -> {
+            double temp_sum = 0;
+            for (long i = 0; i < n; i++) {
+                double a = ((i % 2000) - 1000) / 33.0;
+                double b = ((i % 200) - 100) / 22.0;
+                double c = ((i % 20) - 10) / 11.0;
+                temp_sum += call_solver(type, a, b, c);
+            }
+            lock.lock();
+            try {
+                double finalTemp_sum = temp_sum;
+                final_sum.updateAndGet(v -> new Double((double) (v + finalTemp_sum)));
+            } finally {
+                lock.unlock();
+            }
+            executor.shutdown();
+        });
+        time = System.nanoTime() - time;
+        System.out.printf("Elapsed Parrarel      %,9.3f ms\n", time / 1_000_000.0);
     }
 }
